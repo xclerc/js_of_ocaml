@@ -42,39 +42,39 @@ function caml_parse_engine(tables, env, cmd, arg)
   var COMPUTE_SEMANTIC_ACTION = 4;
   var CALL_ERROR_FUNCTION = 5;
 
-  var env_s_stack = 1;
-  var env_v_stack = 2;
-  var env_symb_start_stack = 3;
-  var env_symb_end_stack = 4;
-  var env_stacksize = 5;
-  var env_stackbase = 6;
-  var env_curr_char = 7;
-  var env_lval = 8;
-  var env_symb_start = 9;
-  var env_symb_end = 10;
-  var env_asp = 11;
-  var env_rule_len = 12;
-  var env_rule_number = 13;
-  var env_sp = 14;
-  var env_state = 15;
-  var env_errflag = 16;
+  var env_s_stack = 0;
+  var env_v_stack = 1;
+  var env_symb_start_stack = 2;
+  var env_symb_end_stack = 3;
+  var env_stacksize = 4;
+  var env_stackbase = 5;
+  var env_curr_char = 6;
+  var env_lval = 7;
+  var env_symb_start = 8;
+  var env_symb_end = 9;
+  var env_asp = 10;
+  var env_rule_len = 11;
+  var env_rule_number = 12;
+  var env_sp = 13;
+  var env_state = 14;
+  var env_errflag = 15;
 
-  // var _tbl_actions = 1;
-  var tbl_transl_const = 2;
-  var tbl_transl_block = 3;
-  var tbl_lhs = 4;
-  var tbl_len = 5;
-  var tbl_defred = 6;
-  var tbl_dgoto = 7;
-  var tbl_sindex = 8;
-  var tbl_rindex = 9;
-  var tbl_gindex = 10;
-  var tbl_tablesize = 11;
-  var tbl_table = 12;
-  var tbl_check = 13;
-  // var _tbl_error_function = 14;
-  // var _tbl_names_const = 15;
-  // var _tbl_names_block = 16;
+  // var _tbl_actions = 0;
+  var tbl_transl_const = 1;
+  var tbl_transl_block = 2;
+  var tbl_lhs = 3;
+  var tbl_len = 4;
+  var tbl_defred = 5;
+  var tbl_dgoto = 6;
+  var tbl_sindex = 7;
+  var tbl_rindex = 8;
+  var tbl_gindex = 9;
+  var tbl_tablesize = 10;
+  var tbl_table = 11;
+  var tbl_check = 12;
+  // var _tbl_error_function = 13;
+  // var _tbl_names_const = 14;
+  // var _tbl_names_block = 15;
 
   if (!tables.dgoto) {
     tables.defred = caml_lex_array (tables[tbl_defred]);
@@ -112,10 +112,10 @@ function caml_parse_engine(tables, env, cmd, arg)
                                   /* symb_start and symb_end */
     case 1://TOKEN_READ:
       if (arg instanceof Array) {
-        env[env_curr_char] = tables[tbl_transl_block][arg[0] + 1];
+        env[env_curr_char] = tables[tbl_transl_block][arg[0]];
         env[env_lval] = arg[1];
       } else {
-        env[env_curr_char] = tables[tbl_transl_const][arg + 1];
+        env[env_curr_char] = tables[tbl_transl_const][arg];
         env[env_lval] = 0;
       }
       // Fall through
@@ -144,7 +144,7 @@ function caml_parse_engine(tables, env, cmd, arg)
       if (errflag < 3) {
         errflag = 3;
         for (;;) {
-          state1 = env[env_s_stack][sp + 1];
+          state1 = env[env_s_stack][sp];
           n1 = tables.sindex[state1];
           n2 = n1 + ERRCODE;
           if (n1 != 0 && n2 >= 0 && n2 <= tables[tbl_tablesize] &&
@@ -177,10 +177,10 @@ function caml_parse_engine(tables, env, cmd, arg)
       // Fall through
                                    /* The ML code resizes the stacks */
     case 2://STACKS_GROWN_1:
-      env[env_s_stack][sp + 1] = state;
-      env[env_v_stack][sp + 1] = env[env_lval];
-      env[env_symb_start_stack][sp + 1] = env[env_symb_start];
-      env[env_symb_end_stack][sp + 1] = env[env_symb_end];
+      env[env_s_stack][sp] = state;
+      env[env_v_stack][sp] = env[env_lval];
+      env[env_symb_start_stack][sp] = env[env_symb_start];
+      env[env_symb_end_stack][sp] = env[env_symb_end];
       cmd = loop;
       break;
 
@@ -189,7 +189,7 @@ function caml_parse_engine(tables, env, cmd, arg)
       env[env_asp] = sp;
       env[env_rule_number] = n;
       env[env_rule_len] = m;
-      sp = sp - m + 1;
+      sp = sp - m;
       m = tables.lhs[n];
       state1 = env[env_s_stack][sp];
       n1 = tables.gindex[m];
@@ -210,13 +210,13 @@ function caml_parse_engine(tables, env, cmd, arg)
       break exit;
                                   /* The ML code calls the semantic action */
     case 4://SEMANTIC_ACTION_COMPUTED:
-      env[env_s_stack][sp + 1] = state;
-      env[env_v_stack][sp + 1] = arg;
+      env[env_s_stack][sp] = state;
+      env[env_v_stack][sp] = arg;
       var asp = env[env_asp];
-      env[env_symb_end_stack][sp + 1] = env[env_symb_end_stack][asp + 1];
+      env[env_symb_end_stack][sp] = env[env_symb_end_stack][asp];
       if (sp > asp) {
         /* This is an epsilon production. Take symb_start equal to symb_end. */
-        env[env_symb_start_stack][sp + 1] = env[env_symb_end_stack][asp + 1];
+        env[env_symb_start_stack][sp] = env[env_symb_end_stack][asp];
       }
       cmd = loop; break;
                                   /* Should not happen */

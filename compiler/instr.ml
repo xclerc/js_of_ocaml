@@ -167,6 +167,8 @@ type t =
   | BREAK
   | RERAISE
   | RAISE_NOTRACE
+  | MAKEARRAY
+  | MAKEFLOATARRAY
   | FIRST_UNIMPLEMENTED_OP
 
 
@@ -344,6 +346,8 @@ let ops,ops_rev =
        BREAK, K_will_not_happen, "BREAK";
        RERAISE, if_v4 (KStop 0) K_will_not_happen, "RERAISE";
        RAISE_NOTRACE, if_v4 (KStop 0) K_will_not_happen, "RAISE_NOTRACE";
+       MAKEARRAY, if_v4 KUnary K_will_not_happen, "MAKEARRAY";
+       MAKEFLOATARRAY, if_v4 KUnary K_will_not_happen, "MAKEFLOATARRAY";
        FIRST_UNIMPLEMENTED_OP, K_will_not_happen, "FIRST_UNIMPLEMENTED_OP"|] in
   let ops =
     Array.mapi

@@ -63,7 +63,7 @@ function caml_static_free () { return 0; }
 //Provides: caml_realloc_global
 //Requires: caml_global_data
 function caml_realloc_global (len) {
-  if (len + 1 > caml_global_data.length) caml_global_data.length = len + 1;
+  if (len > caml_global_data.length) caml_global_data.length = len ;
   return 0;
 }
 
@@ -86,4 +86,4 @@ function caml_dynlink_add_primitive () {
 }
 
 //Provides: caml_dynlink_get_current_libs
-function caml_dynlink_get_current_libs () { return [0, 0]; }
+function caml_dynlink_get_current_libs () { return {tag:0,0:0}; }

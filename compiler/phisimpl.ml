@@ -56,6 +56,8 @@ let expr_deps blocks vars deps defs x e =
       cont_deps blocks vars deps defs cont
   | Block (_, a) ->
       Array.iter (fun y -> add_dep deps x y) a
+  | Array (_, a) ->
+      Array.iter (fun y -> add_dep deps x y) a
   | Field (y, _) ->
       add_dep deps x y
 

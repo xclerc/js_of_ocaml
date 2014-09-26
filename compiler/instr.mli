@@ -167,6 +167,8 @@ type t =
   | BREAK
   | RERAISE
   | RAISE_NOTRACE
+  | MAKEARRAY
+  | MAKEFLOATARRAY
   | FIRST_UNIMPLEMENTED_OP
 
 type kind =

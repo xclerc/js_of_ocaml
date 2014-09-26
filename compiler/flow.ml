@@ -88,6 +88,8 @@ let expr_deps blocks vars deps defs x e =
       cont_deps blocks vars deps defs cont
   | Block (_, a) ->
       Array.iter (fun y -> add_dep deps x y) a
+  | Array (_, a) ->
+      Array.iter (fun y -> add_dep deps x y) a
   | Field (y, _) ->
       add_dep deps x y
 
@@ -141,7 +143,7 @@ let propagate1 deps defs st x =
   | Expr e ->
       match e with
         Const _ | Constant _  | Apply _ | Prim _
-      | Closure _ | Block _ ->
+      | Closure _ | Block _ | Array _ ->
           VarSet.singleton x
       | Field (y, n) ->
           var_set_lift
@@ -189,13 +191,14 @@ let rec block_escape st x =
          st.possibly_mutable.(idx) <- true;
          match st.defs.(Var.idx y) with
            Expr (Block (_, l)) -> Array.iter (fun z -> block_escape st z) l
+         | Expr (Array (_, l)) -> Array.iter (fun z -> block_escape st z) l
          | _                   -> ()
        end)
     (VarTbl.get st.known_origins x)
 
 let expr_escape st _x e =
   match e with
-    Const _ | Constant _ | Closure _ | Block _ | Field _ ->
+    Const _ | Constant _ | Closure _ | Block _ | Array _ | Field _ ->
       ()
   | Apply (_, l, _) ->
       List.iter (fun x -> block_escape st x) l
@@ -218,6 +221,8 @@ let expr_escape st _x e =
           | Pv v,`Shallow_const ->
             begin match st.defs.(Var.idx v) with
               | Expr (Block (_, a)) ->
+                Array.iter (fun x -> block_escape st x) a
+              | Expr (Array (_, a)) ->
                 Array.iter (fun x -> block_escape st x) a
               | _ -> block_escape st v
             end;
@@ -268,7 +273,7 @@ let propagate2 ?(skip_param=false) defs known_origins possibly_mutable st x =
       VarSet.exists (fun y -> VarTbl.get st y) s
   | Expr e ->
       match e with
-        Const _ | Constant _ | Closure _ | Apply _ | Prim _ | Block _ ->
+        Const _ | Constant _ | Closure _ | Apply _ | Prim _ | Block _ | Array _ ->
           false
       | Field (y, n) ->
           VarTbl.get st y

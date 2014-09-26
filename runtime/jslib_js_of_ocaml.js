@@ -31,11 +31,9 @@ function caml_js_to_float(x) { return x; }
 //Requires: MlString
 function caml_js_from_string(s) { return s.toString(); }
 //Provides: caml_js_from_array mutable
-//Requires: raw_array_sub
-function caml_js_from_array(a) { return raw_array_sub(a,1,a.length-1); }
+function caml_js_from_array(a) { return a; }
 //Provides: caml_js_to_array mutable
-//Requires: raw_array_cons
-function caml_js_to_array(a) { return raw_array_cons(a,0); }
+function caml_js_to_array(a) { return a; }
 
 //Provides: caml_js_var mutable
 //Requires: js_print_stderr
@@ -65,14 +63,14 @@ function caml_js_meth_call(o, f, args) {
 //Requires: caml_js_from_array
 function caml_js_new(c, a) {
   switch (a.length) {
-  case 1: return new c;
-  case 2: return new c (a[1]);
-  case 3: return new c (a[1],a[2]);
-  case 4: return new c (a[1],a[2],a[3]);
-  case 5: return new c (a[1],a[2],a[3],a[4]);
-  case 6: return new c (a[1],a[2],a[3],a[4],a[5]);
-  case 7: return new c (a[1],a[2],a[3],a[4],a[5],a[6]);
-  case 8: return new c (a[1],a[2],a[3],a[4],a[5],a[6], a[7]);
+  case 0: return new c;
+  case 1: return new c (a[0]);
+  case 2: return new c (a[0],a[1]);
+  case 3: return new c (a[0],a[1],a[2]);
+  case 4: return new c (a[0],a[1],a[2],a[3]);
+  case 5: return new c (a[0],a[1],a[2],a[3],a[4]);
+  case 6: return new c (a[0],a[1],a[2],a[3],a[4],a[5]);
+  case 7: return new c (a[0],a[1],a[2],a[3],a[4],a[5],a[6]);
   }
   function F() { return c.apply(this, caml_js_from_array(a)); }
   F.prototype = c.prototype;
@@ -129,9 +127,9 @@ function caml_pure_js_expr (s){
 //Requires: MlString
 function caml_js_object (a) {
   var o = {};
-  for (var i = 1; i < a.length; i++) {
+  for (var i = 0; i < a.length; i++) {
     var p = a[i];
-    o[p[1].toString()] = p[2];
+    o[p[0].toString()] = p[1];
   }
   return o;
 }

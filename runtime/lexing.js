@@ -29,18 +29,18 @@ function caml_lex_array(s) {
 //Provides: caml_lex_engine
 //Requires: caml_failwith, caml_lex_array, caml_array_of_string
 function caml_lex_engine(tbl, start_state, lexbuf) {
-  var lex_buffer = 2;
-  var lex_buffer_len = 3;
-  var lex_start_pos = 5;
-  var lex_curr_pos = 6;
-  var lex_last_pos = 7;
-  var lex_last_action = 8;
-  var lex_eof_reached = 9;
-  var lex_base = 1;
-  var lex_backtrk = 2;
-  var lex_default = 3;
-  var lex_trans = 4;
-  var lex_check = 5;
+  var lex_buffer = 1;
+  var lex_buffer_len = 2;
+  var lex_start_pos = 4;
+  var lex_curr_pos = 5;
+  var lex_last_pos = 6;
+  var lex_last_action = 7;
+  var lex_eof_reached = 8;
+  var lex_base = 0;
+  var lex_backtrk = 1;
+  var lex_default = 2;
+  var lex_trans = 3;
+  var lex_check = 4;
 
   if (!tbl.lex_default) {
     tbl.lex_base =    caml_lex_array (tbl[lex_base]);
@@ -117,9 +117,9 @@ function caml_lex_run_mem(s, i, mem, curr_pos) {
     if (dst == 0xff) return;
     var src = s.charCodeAt(i); i++;
     if (src == 0xff)
-      mem [dst + 1] = curr_pos;
+      mem [dst] = curr_pos;
     else
-      mem [dst + 1] = mem [src + 1];
+      mem [dst] = mem [src];
   }
 }
 
@@ -129,32 +129,32 @@ function caml_lex_run_tag(s, i, mem) {
     if (dst == 0xff) return ;
     var src = s.charCodeAt(i); i++;
     if (src == 0xff)
-      mem [dst + 1] = -1;
+      mem [dst] = -1;
     else
-      mem [dst + 1] = mem [src + 1];
+      mem [dst] = mem [src];
   }
 }
 
 function caml_new_lex_engine(tbl, start_state, lexbuf) {
-  var lex_buffer = 2;
-  var lex_buffer_len = 3;
-  var lex_start_pos = 5;
-  var lex_curr_pos = 6;
-  var lex_last_pos = 7;
-  var lex_last_action = 8;
-  var lex_eof_reached = 9;
-  var lex_mem = 10;
-  var lex_base = 1;
-  var lex_backtrk = 2;
-  var lex_default = 3;
-  var lex_trans = 4;
-  var lex_check = 5;
-  var lex_base_code = 6;
-  var lex_backtrk_code = 7;
-  var lex_default_code = 8;
-  var lex_trans_code = 9;
-  var lex_check_code = 10;
-  var lex_code = 11;
+  var lex_buffer = 1;
+  var lex_buffer_len = 2;
+  var lex_start_pos = 4;
+  var lex_curr_pos = 5;
+  var lex_last_pos = 6;
+  var lex_last_action = 7;
+  var lex_eof_reached = 8;
+  var lex_mem = 9;
+  var lex_base = 0;
+  var lex_backtrk = 1;
+  var lex_default = 2;
+  var lex_trans = 3;
+  var lex_check = 4;
+  var lex_base_code = 5;
+  var lex_backtrk_code = 6;
+  var lex_default_code = 7;
+  var lex_trans_code = 8;
+  var lex_check_code = 9;
+  var lex_code = 10;
 
   if (!tbl.lex_default) {
     tbl.lex_base =    caml_lex_array (tbl[lex_base]);
@@ -241,4 +241,3 @@ function caml_new_lex_engine(tbl, start_state, lexbuf) {
     }
   }
 }
-

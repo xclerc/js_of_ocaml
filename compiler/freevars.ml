@@ -35,6 +35,8 @@ let iter_expr_free_vars f e =
       f x; List.iter f l
   | Block (_, a) ->
       Array.iter f a
+  | Array (_, a) ->
+      Array.iter f a
   | Field (x, _) ->
       f x
   | Closure _ ->

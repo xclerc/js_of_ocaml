@@ -212,8 +212,7 @@ function caml_sys_read_directory(name){
     caml_raise_not_a_dir(name);
   }
   var list = dir.list();
-  var l = new Array(list.length + 1);
-  l[0] = 0;
+  var l = new Array(list.length);
   for(var i=0;i<list.length;i++)
     l[i+1] = caml_new_string(list[i]);
   return l;

@@ -37,7 +37,7 @@ function caml_weak_get_copy(x, i) {
   if (y === 0) return y;
   var z = y[0];
   if (z instanceof Array) return [0, caml_obj_dup(z)];
-  if (typeof z.tag == "number") return {tag:z.tag, 0:caml_obj_dup(z)};
+  if (ISBLOCK(z)) return BLOCK(TAG(z),caml_obj_dup(z));
   return y;
 }
 //Provides: caml_weak_check mutable

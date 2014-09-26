@@ -77,23 +77,23 @@ function caml_parse_engine(tables, env, cmd, arg)
   // var _tbl_names_block = 15;
 
   if (!tables.dgoto) {
-    tables.defred = caml_lex_array (tables[tbl_defred]);
-    tables.sindex = caml_lex_array (tables[tbl_sindex]);
-    tables.check  = caml_lex_array (tables[tbl_check]);
-    tables.rindex = caml_lex_array (tables[tbl_rindex]);
-    tables.table  = caml_lex_array (tables[tbl_table]);
-    tables.len    = caml_lex_array (tables[tbl_len]);
-    tables.lhs    = caml_lex_array (tables[tbl_lhs]);
-    tables.gindex = caml_lex_array (tables[tbl_gindex]);
-    tables.dgoto  = caml_lex_array (tables[tbl_dgoto]);
+    tables.defred = caml_lex_array (FIELD(tables,tbl_defred));
+    tables.sindex = caml_lex_array (FIELD(tables,tbl_sindex));
+    tables.check  = caml_lex_array (FIELD(tables,tbl_check));
+    tables.rindex = caml_lex_array (FIELD(tables,tbl_rindex));
+    tables.table  = caml_lex_array (FIELD(tables,tbl_table));
+    tables.len    = caml_lex_array (FIELD(tables,tbl_len));
+    tables.lhs    = caml_lex_array (FIELD(tables,tbl_lhs));
+    tables.gindex = caml_lex_array (FIELD(tables,tbl_gindex));
+    tables.dgoto  = caml_lex_array (FIELD(tables,tbl_dgoto));
   }
 
   var res = 0, n, n1, n2, state1;
 
   // RESTORE
-  var sp = env[env_sp];
-  var state = env[env_state];
-  var errflag = env[env_errflag];
+  var sp = FIELD(env,env_sp);
+  var state = FIELD(env,env_state);
+  var errflag = FIELD(env,env_errflag);
 
   exit:for (;;) {
     switch(cmd) {
@@ -105,32 +105,32 @@ function caml_parse_engine(tables, env, cmd, arg)
     case 6://loop:
       n = tables.defred[state];
       if (n != 0) { cmd = reduce; break; }
-      if (env[env_curr_char] >= 0) { cmd = testshift; break; }
+      if (FIELD(env,env_curr_char) >= 0) { cmd = testshift; break; }
       res = READ_TOKEN;
       break exit;
                                   /* The ML code calls the lexer and updates */
                                   /* symb_start and symb_end */
     case 1://TOKEN_READ:
       if (arg instanceof Array) {
-        env[env_curr_char] = tables[tbl_transl_block][arg[0]];
-        env[env_lval] = arg[1];
+        FIELD(env,env_curr_char) = FIELD(tables,tbl_transl_block)[arg[0]];
+        FIELD(env,env_lval) = arg[1];
       } else {
-        env[env_curr_char] = tables[tbl_transl_const][arg];
-        env[env_lval] = 0;
+        FIELD(env,env_curr_char) = FIELD(tables,tbl_transl_const)[arg];
+        FIELD(env,env_lval) = 0;
       }
       // Fall through
 
     case 7://testshift:
       n1 = tables.sindex[state];
-      n2 = n1 + env[env_curr_char];
-      if (n1 != 0 && n2 >= 0 && n2 <= tables[tbl_tablesize] &&
-          tables.check[n2] == env[env_curr_char]) {
+      n2 = n1 + FIELD(env,env_curr_char);
+      if (n1 != 0 && n2 >= 0 && n2 <= FIELD(tables,tbl_tablesize) &&
+          tables.check[n2] == FIELD(env,env_curr_char)) {
         cmd = shift; break;
       }
       n1 = tables.rindex[state];
-      n2 = n1 + env[env_curr_char];
-      if (n1 != 0 && n2 >= 0 && n2 <= tables[tbl_tablesize] &&
-          tables.check[n2] == env[env_curr_char]) {
+      n2 = n1 + FIELD(env,env_curr_char);
+      if (n1 != 0 && n2 >= 0 && n2 <= FIELD(tables,tbl_tablesize) &&
+          tables.check[n2] == FIELD(env,env_curr_char)) {
         n = tables.table[n2];
         cmd = reduce; break;
       }
@@ -144,62 +144,62 @@ function caml_parse_engine(tables, env, cmd, arg)
       if (errflag < 3) {
         errflag = 3;
         for (;;) {
-          state1 = env[env_s_stack][sp];
+          state1 = FIELD(env,env_s_stack)[sp];
           n1 = tables.sindex[state1];
           n2 = n1 + ERRCODE;
-          if (n1 != 0 && n2 >= 0 && n2 <= tables[tbl_tablesize] &&
+          if (n1 != 0 && n2 >= 0 && n2 <= FIELD(tables,tbl_tablesize) &&
               tables.check[n2] == ERRCODE) {
             cmd = shift_recover; break;
           } else {
-            if (sp <= env[env_stackbase]) return RAISE_PARSE_ERROR;
+            if (sp <= FIELD(env,env_stackbase)) return RAISE_PARSE_ERROR;
                                     /* The ML code raises Parse_error */
             sp--;
           }
         }
       } else {
-        if (env[env_curr_char] == 0) return RAISE_PARSE_ERROR;
+        if (FIELD(env,env_curr_char) == 0) return RAISE_PARSE_ERROR;
                                     /* The ML code raises Parse_error */
-        env[env_curr_char] = -1;
+        FIELD(env,env_curr_char) = -1;
         cmd = loop; break;
       }
       // Fall through
     case 8://shift:
-      env[env_curr_char] = -1;
+      FIELD(env,env_curr_char) = -1;
       if (errflag > 0) errflag--;
       // Fall through
     case 9://shift_recover:
       state = tables.table[n2];
       sp++;
-      if (sp >= env[env_stacksize]) {
+      if (sp >= FIELD(env,env_stacksize)) {
         res = GROW_STACKS_1;
         break exit;
       }
       // Fall through
                                    /* The ML code resizes the stacks */
     case 2://STACKS_GROWN_1:
-      env[env_s_stack][sp] = state;
-      env[env_v_stack][sp] = env[env_lval];
-      env[env_symb_start_stack][sp] = env[env_symb_start];
-      env[env_symb_end_stack][sp] = env[env_symb_end];
+      FIELD(env,env_s_stack)[sp] = state;
+      FIELD(env,env_v_stack)[sp] = FIELD(env,env_lval);
+      FIELD(env,env_symb_start_stack)[sp] = FIELD(env,env_symb_start);
+      FIELD(env,env_symb_end_stack)[sp] = FIELD(env,env_symb_end);
       cmd = loop;
       break;
 
     case 10://reduce:
       var m = tables.len[n];
-      env[env_asp] = sp;
-      env[env_rule_number] = n;
-      env[env_rule_len] = m;
+      FIELD(env,env_asp) = sp;
+      FIELD(env,env_rule_number) = n;
+      FIELD(env,env_rule_len) = m;
       sp = sp - m;
       m = tables.lhs[n];
-      state1 = env[env_s_stack][sp];
+      state1 = FIELD(env,env_s_stack)[sp];
       n1 = tables.gindex[m];
       n2 = n1 + state1;
-      if (n1 != 0 && n2 >= 0 && n2 <= tables[tbl_tablesize] &&
+      if (n1 != 0 && n2 >= 0 && n2 <= FIELD(tables,tbl_tablesize) &&
           tables.check[n2] == state1)
         state = tables.table[n2];
       else
         state = tables.dgoto[m];
-      if (sp >= env[env_stacksize]) {
+      if (sp >= FIELD(env,env_stacksize)) {
         res = GROW_STACKS_2;
         break exit;
       }
@@ -210,13 +210,13 @@ function caml_parse_engine(tables, env, cmd, arg)
       break exit;
                                   /* The ML code calls the semantic action */
     case 4://SEMANTIC_ACTION_COMPUTED:
-      env[env_s_stack][sp] = state;
-      env[env_v_stack][sp] = arg;
-      var asp = env[env_asp];
-      env[env_symb_end_stack][sp] = env[env_symb_end_stack][asp];
+      FIELD(env,env_s_stack)[sp] = state;
+      FIELD(env,env_v_stack)[sp] = arg;
+      var asp = FIELD(env,env_asp);
+      FIELD(env,env_symb_end_stack)[sp] = FIELD(env,env_symb_end_stack)[asp];
       if (sp > asp) {
         /* This is an epsilon production. Take symb_start equal to symb_end. */
-        env[env_symb_start_stack][sp] = env[env_symb_end_stack][asp];
+        FIELD(env,env_symb_start_stack)[sp] = FIELD(env,env_symb_end_stack)[asp];
       }
       cmd = loop; break;
                                   /* Should not happen */
@@ -225,9 +225,9 @@ function caml_parse_engine(tables, env, cmd, arg)
     }
   }
   // SAVE
-  env[env_sp] = sp;
-  env[env_state] = state;
-  env[env_errflag] = errflag;
+  FIELD(env,env_sp) = sp;
+  FIELD(env,env_state) = state;
+  FIELD(env,env_errflag) = errflag;
   return res;
 }
 

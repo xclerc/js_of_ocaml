@@ -45,7 +45,7 @@ function caml_sys_open_internal(idx,file,flags) {
 function caml_sys_open (name, flags, _perms) {
   var f = {};
   while(flags){
-    switch(flags[0]){
+    switch(FIELD(flags,0)){
     case 0: f.rdonly = 1;break;
     case 1: f.wronly = 1;break;
     case 2: f.append = 1;break;
@@ -56,7 +56,7 @@ function caml_sys_open (name, flags, _perms) {
     case 7: f.text = 1;break;
     case 8: f.nonblock = 1;break;
     }
-    flags=flags[1];
+    flags=FIELD(flags,1);
   }
   var name2 = name.toString();
   var path = caml_make_path(name);
@@ -95,7 +95,7 @@ function caml_ml_out_channels_list () {
   var l = 0;
   for(var c in caml_ml_out_channels){
     if(caml_ml_out_channels[c].opened)
-      l={tag:0,0:caml_ml_out_channels[c],1:l};
+      l=BLOCK(0,caml_ml_out_channels[c],l);
   }
   return l;
 }

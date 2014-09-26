@@ -54,6 +54,12 @@ let keyword = List.fold_left (fun acc x -> StringSet.add x acc)
     "undefined";
     "this";
 
+    "BLOCK";
+    "ISBLOCK";
+    "LENGTH";
+    "TAG";
+    "FIELD";
+
 ]
 
 

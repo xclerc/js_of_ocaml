@@ -251,8 +251,11 @@ let bool e = J.ECond (e, one, zero)
 let val_float f = f (*J.EArr [Some (J.ENum 253.); Some f]*)
 let float_val e = e (*J.EAccess (e, one)*)
 
-let access_field x d = J.EAccess(x,int d)
-
+let access_field x d = J.ECall(J.EVar (J.S {J.name="FIELD";var=None}),[x;int d],J.N)
+let isblock x = J.ECall(J.EVar (J.S {J.name="ISBLOCK";var=None}),[x],J.N)
+let blength x = J.ECall(J.EVar (J.S {J.name="LENGTH";var=None}),[x],J.N)
+let btag x = J.ECall(J.EVar (J.S {J.name="TAG";var=None}),[x],J.N)
+let makeblock tag l = J.ECall(J.EVar (J.S {J.name="BLOCK";var=None}),(int tag)::l,J.N)
 (****)
 
 let source_location ctx ?after pc =
@@ -1047,7 +1050,7 @@ and translate_expr ctx queue loc _x e level : _ * J.statement_list =
     let res = match p, l with
         Vectlength, [x] ->
         let ((px, cx), queue) = access_queue' ~ctx queue x in
-        (J.EDot (cx, "length"), px, queue)
+        (blength cx, px, queue)
       | Array_get, [x; y] ->
         let ((px, cx), queue) = access_queue' ~ctx queue x in
         let ((py, cy), queue) = access_queue' ~ctx queue y in
@@ -1655,7 +1658,7 @@ and compile_conditional st queue pc last handler backs frontier interm succs =
     let ((_px, cx), queue) = access_queue queue x in
     let code =
       compile_decision_tree st queue handler backs frontier interm succs
-        loc (J.EDot(cx, "tag")) (DTree.build_switch a2) in
+        loc (btag cx) (DTree.build_switch a2) in
     flush_all queue code
   | Switch (x,a1,[||]) ->
     let ((_px, cx), queue) = access_queue queue x in
@@ -1672,7 +1675,7 @@ and compile_conditional st queue pc last handler backs frontier interm succs =
         loc (var x)
         (DTree.build_switch a1) in
     let b2 = compile_decision_tree st queue handler backs frontier interm succs
-        loc (J.EDot(var x, "tag"))
+        loc (btag (var x))
         (DTree.build_switch a2) in
     let code =
       Js_simpl.if_statement
@@ -1829,12 +1832,12 @@ let generate_shared_value ctx =
     (J.Function_declaration (J.V var,List.map (fun (_,v) -> J.V v) params, body, J.N),J.N) ::
     (J.Statement (
       J.Expression_statement (
-        J.EBin (J.Eq, J.EDot (J.EDot (J.EVar (J.V var), "prototype"), "tag"), int tag)
+        J.EBin (J.Eq, btag (J.EDot (J.EVar (J.V var), "prototype")), int tag)
       )
      ), J.N) ::
     (J.Statement (
       J.Expression_statement (
-        J.EBin (J.Eq, J.EDot (J.EDot (J.EVar (J.V var), "prototype"), "length"), int size)
+        J.EBin (J.Eq, blength (J.EDot (J.EVar (J.V var), "prototype")), int size)
       )
      ), J.N) ::
     acc

@@ -271,6 +271,11 @@ let link ~standalone ?linkall js =
     end
   else js
 
+
+let field =
+  let t = VarPrinter.create () in
+  (fun n -> VarPrinter.to_string t n)
+
 class macro = object (m)
     inherit Js_traverse.map as super
     method expression x =
@@ -282,14 +287,14 @@ class macro = object (m)
           J.EObj(one "tag" tag
                  :: one "length" (J.ENum (float_of_int len))
                  :: List.mapi (fun i e ->
-                   one (Printf.sprintf "f%d" i) e
+                   one (field i) e
                  ) args )
         | J.ECall(J.EVar (J.S {J.name="TAG"}), [e],_) ->
           J.EDot(m#expression e,"tag")
         | J.ECall(J.EVar (J.S {J.name="LENGTH"}), [e],_) ->
           J.EDot(m#expression e,"length")
         | J.ECall(J.EVar (J.S {J.name="FIELD"}), [e;J.ENum i],_) ->
-          J.EDot(m#expression e,Printf.sprintf "f%d" (int_of_float i))
+          J.EDot(m#expression e,field (int_of_float i))
         | J.ECall(J.EVar (J.S {J.name="FIELD"}), [e;i],_) ->
           J.EAccess(m#expression e,J.EBin(J.Plus, J.EStr("f",`Utf8), m#expression i))
         | J.ECall(J.EVar (J.S {J.name="FIELD"}), _,_) -> assert false

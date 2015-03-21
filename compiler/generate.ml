@@ -873,10 +873,10 @@ let _ =
   register_tern_prim "caml_array_unsafe_set"
     (fun cx cy cz _ ->
        J.EBin (J.Eq, J.EAccess (cx, cy), cz));
-  register_un_prim "caml_alloc_dummy" `Pure (fun cx _ -> J.EObj []);
+  register_un_prim "caml_alloc_dummy" `Pure (fun _ _ -> J.EObj []);
   (* register_un_prim "caml_obj_dup" `Mutable *)
   (*   (fun cx loc -> J.ECall (J.EDot (cx, "slice"), [], loc)); *)
-  register_un_prim "caml_int_of_float" `Pure (fun cx loc -> to_int cx);
+  register_un_prim "caml_int_of_float" `Pure (fun cx _ -> to_int cx);
   register_un_math_prim "caml_abs_float" "abs";
   register_un_math_prim "caml_acos_float" "acos";
   register_un_math_prim "caml_asin_float" "asin";
@@ -1022,7 +1022,7 @@ and translate_expr ctx queue loc _x e level : _ * J.statement_list =
           (Array.to_list a) ([], const_p, queue)
       in
       (J.ENew (J.EVar (Ctx.get_constr ctx tag contents), Some contents), prop, queue),[]
-  | Array (tag, a) ->
+  | Array (_tag, a) ->
       let (contents, prop, queue) =
         List.fold_right
           (fun x (args, prop, queue) ->

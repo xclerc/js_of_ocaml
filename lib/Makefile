@@ -111,10 +111,10 @@ syntax/pa_deriving_Json.cmxs: syntax/pa_deriving_Json.cmx
 	$(OCAMLOPT) -I syntax -shared -linkall -o $@ $<
 
 graphics/%.cmo: graphics/%.ml graphics/%.cmi syntax/pa_js.cmo
-	$(OCAMLC) -syntax camlp4o $(SAFESTRING) -package lwt,lwt.syntax,graphics -ppopt syntax/pa_js.cmo -I graphics -c $< -o $@
+	$(OCAMLC) -syntax camlp4o $(SAFESTRING) -package lwt,lwt.syntax -ppopt syntax/pa_js.cmo -I graphics -c $< -o $@
 
 graphics/%.cmi: graphics/%.mli
-	$(OCAMLC) $(SAFESTRING) -package lwt,graphics -I ./ $< -o $@
+	$(OCAMLC) $(SAFESTRING) -package lwt -I ./ $< -o $@
 
 graphics/graphics.cma: graphics/graphics_js.cmo
 	$(OCAMLC) -a -o $@ $^

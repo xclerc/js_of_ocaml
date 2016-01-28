@@ -68,7 +68,7 @@ package "graphics" (
   description = "Graphics for js_of_ocaml."
   version = "[distributed with js_of_ocaml]"
   archive(byte) = "graphics.cma"
-  requires = "lwt,graphics,js_of_ocaml"
+  requires = "lwt,js_of_ocaml"
 )
 
 package "tyxml" (

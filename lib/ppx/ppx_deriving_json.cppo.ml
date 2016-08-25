@@ -257,14 +257,14 @@ let rec read_poly_case ?decl y = function
      | l ->
        Ast_helper.Exp.case [%pat? `NCst [%p i]] [%expr
          Deriving_Json_lexer.read_comma buf;
-         let v = [%e read_body_of_type ?decl (maybe_tuple_type l)] in
+         let v = [%e read_body_of_type ~nested:true (maybe_tuple_type l)] in
          Deriving_Json_lexer.read_rbracket buf;
          [%e Ast_helper.Exp.variant label (Some [%expr v])]])
   | Rinherit {ptyp_desc = Ptyp_constr (lid, l)} ->
     let guard = [%expr [%e suffix_lid lid ~suffix:"recognize"] x]
     and e =
       let e = suffix_lid lid ~suffix:"of_json_with_tag"
-      and l = List.map (read_of_type ?decl) l in
+      and l = List.map (read_of_type ?decl ~nested:false) l in
       [%expr ([%e Ast_convenience.app e l] buf x :> [%t y])]
     in
     Ast_helper.Exp.case ~guard [%pat? x] e
@@ -277,11 +277,11 @@ and read_of_poly_variant ?decl l y ~loc =
   Ast_helper.Exp.function_ |>
   buf_expand
 
-and read_tuple_contents ?decl l ~f =
+and read_tuple_contents l ~f =
   let n = List.length l in
   let lv = fresh_vars n in
   let f v y acc =
-    let e = read_body_of_type ?decl y in [%expr
+    let e = read_body_of_type ~nested:true y in [%expr
       Deriving_Json_lexer.read_comma buf;
       let [%p Ast_convenience.pvar v] = [%e e] in
       [%e acc]]
@@ -289,12 +289,12 @@ and read_tuple_contents ?decl l ~f =
   let acc = [%expr Deriving_Json_lexer.read_rbracket buf; [%e acc]] in
   List.fold_right2 f lv l acc
 
-and read_body_of_tuple_type ?decl l = [%expr
+and read_body_of_tuple_type l = [%expr
   Deriving_Json_lexer.read_lbracket buf;
   ignore (Deriving_Json_lexer.read_tag_1 0 buf);
-  [%e read_tuple_contents ?decl l ~f:Ast_helper.Exp.tuple]]
+  [%e read_tuple_contents l ~f:Ast_helper.Exp.tuple]]
 
-and read_of_record_raw ?decl ?(return = (fun x -> x)) l =
+and read_of_record_raw ?(return = (fun x -> x)) l =
   let f =
     let f {Parsetree.pld_name} e = label_of_constructor pld_name, e in
     fun l' -> return (Ast_helper.Exp.record (List.map2 f l l') None)
@@ -302,17 +302,17 @@ and read_of_record_raw ?decl ?(return = (fun x -> x)) l =
     let f {Parsetree.pld_type} = pld_type in
     List.map f l
   in
-  read_tuple_contents l ?decl ~f
+  read_tuple_contents l ~f
 
-and read_of_record decl l =
-  let e = read_of_record_raw ~decl l in
+and read_of_record l =
+  let e = read_of_record_raw l in
   [%expr
       Deriving_Json_lexer.read_lbracket buf;
       ignore (Deriving_Json_lexer.read_tag_2 0 254 buf);
       [%e e]] |> buf_expand
 
-and read_body_of_type ?decl y =
-  let poly = match decl with Some _ -> true | _ -> false in
+and read_body_of_type ?decl y ~nested =
+  let poly = nested || match decl with Some _ -> true | _ -> false in
   match y with
   | [%type: unit] ->
     [%expr Deriving_Json.Json_unit.read buf]
@@ -335,15 +335,15 @@ and read_body_of_type ?decl y =
   | [%type: bytes] ->
     [%expr Deriving_Json.Json_bytes.read buf]
   | [%type: [%t? y] list] ->
-    [%expr Deriving_Json.read_list [%e read_of_type ?decl y] buf]
+    [%expr Deriving_Json.read_list [%e read_of_type y ~nested] buf]
   | [%type: [%t? y] ref] ->
-    [%expr Deriving_Json.read_ref [%e read_of_type ?decl y] buf]
+    [%expr Deriving_Json.read_ref [%e read_of_type y ~nested] buf]
   | [%type: [%t? y] option] ->
-    [%expr Deriving_Json.read_option [%e read_of_type ?decl y] buf]
+    [%expr Deriving_Json.read_option [%e read_of_type y ~nested] buf]
   | [%type: [%t? y] array] ->
-    [%expr Deriving_Json.read_array [%e read_of_type ?decl y] buf]
+    [%expr Deriving_Json.read_array [%e read_of_type y ~nested] buf]
   | { Parsetree.ptyp_desc = Ptyp_tuple l } ->
-    read_body_of_tuple_type l ?decl
+    read_body_of_tuple_type l
   | { Parsetree.ptyp_desc = Ptyp_variant (l, _, _); ptyp_loc = loc } ->
     let e =
       (match decl with
@@ -351,7 +351,7 @@ and read_body_of_type ?decl y =
          let e = suffix_decl decl ~suffix:"of_json_with_tag"
          and l =
            let {Parsetree.ptype_params = l} = decl
-           and f (y, _) = read_of_type y ~decl in
+           and f (y, _) = read_of_type y ~nested in
            List.map f l
          in
          Ast_convenience.app e l
@@ -363,18 +363,18 @@ and read_body_of_type ?decl y =
     [%expr [%e Ast_convenience.evar ("poly_" ^ v)] buf]
   | { Parsetree.ptyp_desc = Ptyp_constr (lid, l) } ->
     let e = suffix_lid lid ~suffix:"of_json"
-    and l = List.map (read_of_type ?decl) l in
+    and l = List.map (read_of_type ~nested) l in
     [%expr [%e Ast_convenience.app e l] buf]
   | { Parsetree.ptyp_loc } ->
     Location.raise_errorf ~loc:ptyp_loc
       "%s_read cannot be derived for %s" deriver
       (Ppx_deriving.string_of_core_type y)
 
-and read_of_type ?decl y =
-  read_body_of_type ?decl y |> buf_expand
+and read_of_type ?decl y ~nested =
+  buf_expand (read_body_of_type ?decl y ~nested)
 
 let json_of_type ?decl y =
-  let read = read_of_type ?decl y
+  let read = read_of_type ?decl y ~nested:false
   and write =
     let poly = match decl with Some _ -> true | _ -> false in
     write_of_type y ~poly in
@@ -457,7 +457,9 @@ let write_decl_of_type d y =
    [%expr fun buf a -> [%e e]]) |> write_str_wrap d
 
 let read_decl_of_type decl y =
-  read_body_of_type y ~decl |> buf_expand |> read_str_wrap decl
+  read_body_of_type y ~decl ~nested:false
+  |> buf_expand
+  |> read_str_wrap decl
 
 let json_decls_of_type decl y =
   let recognize, read_tag =
@@ -553,7 +555,7 @@ let read_case ?decl (i, i', l)
 #else
   | pcd_args ->
 #endif
-    let expr = read_tuple_contents ?decl pcd_args ~f in
+    let expr = read_tuple_contents pcd_args ~f in
     let case = Ast_helper.Exp.case [%pat? `NCst [%p Ast_convenience.pint i']] expr in
     i, i' + 1, case :: l
 #if OCAML_VERSION >= (4, 03, 0)
@@ -565,7 +567,7 @@ let read_case ?decl (i, i', l)
           (label_of_constructor pcd_name)
           (Some e)
       in
-      read_of_record_raw ?decl pcd_args ~return
+      read_of_record_raw pcd_args ~return
     in
     i, i' + 1, Ast_helper.Exp.case patt expr :: l
 #endif
@@ -585,7 +587,7 @@ let write_decl_of_record d l =
   write_of_record d l |> write_str_wrap d
 
 let read_decl_of_record d l =
-  read_of_record d l |> read_str_wrap d
+  read_of_record l |> read_str_wrap d
 
 let json_decls_of_record d l =
   check_record_fields l;
@@ -685,7 +687,7 @@ let register_for_expr s f =
 let _ =
   register_for_expr "of_json" @@ fun y -> [%expr
     fun s ->
-      [%e read_of_type y]
+      [%e read_of_type y ~nested:false]
         (Deriving_Json_lexer.init_lexer (Lexing.from_string s))]
 
 let _ =

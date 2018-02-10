@@ -1,4 +1,4 @@
-open Deriving_Json;;
+open Js_of_ocaml_deriving_json;;
 
 let test name v = Printf.printf "%s = %s\n%!" name v;;
 

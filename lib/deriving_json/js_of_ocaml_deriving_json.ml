@@ -19,7 +19,7 @@
 
 (** Json **)
 
-module Lexer = Deriving_Json_lexer
+module Lexer = Lexer
 
 type 'a t = {
     write: Buffer.t -> 'a -> unit;

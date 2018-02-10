@@ -13,8 +13,8 @@
 
 (rule
  ((targets (ppx.mlt.corrected))
-  (deps    (../../../lib/deriving_json/deriving_Json.cmi
-            ../../../lib/deriving_json/deriving_Json_lexer.cmi))
+  (deps    (../../../lib/deriving_json/js_of_ocaml_deriving_json.cmi
+            ../../../lib/deriving_json/js_of_ocaml_deriving_json__Lexer.cmi))
   (action  (run ${exe:main.bc} ${path:ppx.mlt}))
  ))
 

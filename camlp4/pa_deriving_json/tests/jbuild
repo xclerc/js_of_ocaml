@@ -3,11 +3,11 @@
 (rule
  ((targets (deriving.corrected))
   (deps    (deriving.ml.pp
-           ../../../lib/deriving_json/js_of_ocaml_deriving.cma
-           ../../../lib/deriving_json/deriving_Json.cmi
-           ../../../lib/deriving_json/deriving_Json_lexer.cmi))
+           ../../../lib/deriving_json/js_of_ocaml_deriving_json.cma
+           ../../../lib/deriving_json/js_of_ocaml_deriving_json.cmi
+           ../../../lib/deriving_json/js_of_ocaml_deriving_json__Lexer.cmi))
   (action  (with-stdout-to ${@}
-              (run ocaml -I ../../../lib/deriving_json/ js_of_ocaml_deriving.cma deriving.ml.pp)))
+              (run ocaml -I ../../../lib/deriving_json/ js_of_ocaml_deriving_json.cma deriving.ml.pp)))
  ))
 
 (rule

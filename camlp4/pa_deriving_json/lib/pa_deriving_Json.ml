@@ -22,7 +22,7 @@ open Utils
 
 module Description = struct
   let classname = "Json"
-  let runtimename = "Deriving_Json"
+  let runtimename = "Js_of_ocaml_deriving_json"
   let default_module = Some "Defaults"
   let alpha = None
   let allow_private = false
@@ -53,7 +53,7 @@ module Builder(Generator : Defs.Generator) = struct
 
   module Helpers = Generator.AstHelpers
 
-  let lexer name = <:expr< Deriving_Json_lexer.$lid:name$ >>
+  let lexer name = <:expr< $uid:Description.runtimename$.Lexer.$lid:name$ >>
   let wrap
       ?(read_variant = [ <:match_case< _ -> assert false >> ])
       ?(hashes = <:expr< assert false >>)

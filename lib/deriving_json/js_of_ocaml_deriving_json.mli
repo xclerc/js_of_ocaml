@@ -25,14 +25,43 @@
 (** The type of JSON parser/printer for value of type ['a]. *)
 type 'a t
 
+module Lexer : sig
+  type lexbuf
+
+val init_lexer:
+    ?buf: Buffer.t ->
+    Lexing.lexbuf -> lexbuf
+	(** Create a fresh lexbuf record. *)
+
+val tag_error: typename:string -> lexbuf -> 'a
+
+val read_int: lexbuf  -> int
+val read_bounded_int: ?min:int -> max:int -> lexbuf  -> int
+val read_tag_1 : int -> lexbuf -> int
+val read_tag_2 : int -> int -> lexbuf -> int
+val read_int32: lexbuf -> int32
+val read_int64: lexbuf -> int64
+val read_number: lexbuf -> float
+val read_string: lexbuf -> string
+
+val read_case: lexbuf -> [ `Cst of int | `NCst of int ]
+val read_vcase: lexbuf -> [ `Cst of int | `NCst of int ]
+
+val read_comma: lexbuf -> unit
+val read_lbracket: lexbuf -> unit
+val read_rbracket: lexbuf -> unit
+
+val read_comma_or_rbracket: lexbuf -> [ `Comma | `RBracket ]
+end
+
 val make:
   (Buffer.t -> 'a -> unit) ->
-  (Deriving_Json_lexer.lexbuf -> 'a) ->
+  (Lexer.lexbuf -> 'a) ->
   'a t
 
 val write : 'a t -> Buffer.t -> 'a -> unit
 
-val read : 'a t -> Deriving_Json_lexer.lexbuf -> 'a
+val read : 'a t -> Lexer.lexbuf -> 'a
 
 (** [to_string Json.t<ty> v] marshal the [v] of type [ty] to a JSON string.*)
 val to_string: 'a t -> 'a -> string
@@ -47,13 +76,13 @@ module type Json = sig
   type a
   val t: a t
   val write: Buffer.t -> a -> unit
-  val read: Deriving_Json_lexer.lexbuf -> a
+  val read: Lexer.lexbuf -> a
   val to_string: a -> string
   val from_string: string -> a
 
   (**/**)
   val match_variant: [`Cst of int | `NCst of int] -> bool
-  val read_variant: Deriving_Json_lexer.lexbuf -> [`Cst of int | `NCst of int] -> a
+  val read_variant: Lexer.lexbuf -> [`Cst of int | `NCst of int] -> a
 end
 
 (**/**)
@@ -115,15 +144,15 @@ by registering an alias
 module type Json_min = sig
   type a
   val write: Buffer.t -> a -> unit
-  val read: Deriving_Json_lexer.lexbuf -> a
+  val read: Lexer.lexbuf -> a
 end
 
 module type Json_min' = sig
   type a
   val write: Buffer.t -> a -> unit
-  val read: Deriving_Json_lexer.lexbuf -> a
+  val read: Lexer.lexbuf -> a
   val match_variant: [`Cst of int | `NCst of int] -> bool
-  val read_variant: Deriving_Json_lexer.lexbuf -> [`Cst of int | `NCst of int] -> a
+  val read_variant: Lexer.lexbuf -> [`Cst of int | `NCst of int] -> a
 end
 
 module type Json_min'' = sig
@@ -152,29 +181,29 @@ module Json_option(A : Json) : Json with type a = A.a option
 module Json_array(A : Json) : Json with type a = A.a array
 
 val read_list :
-  (Deriving_Json_lexer.lexbuf -> 'a) ->
-  Deriving_Json_lexer.lexbuf -> 'a list
+  (Lexer.lexbuf -> 'a) ->
+  Lexer.lexbuf -> 'a list
 
 val write_list :
   (Buffer.t -> 'a -> unit) -> Buffer.t -> 'a list -> unit
 
 val read_ref :
-  (Deriving_Json_lexer.lexbuf -> 'a) ->
-  Deriving_Json_lexer.lexbuf -> 'a ref
+  (Lexer.lexbuf -> 'a) ->
+  Lexer.lexbuf -> 'a ref
 
 val write_ref :
   (Buffer.t -> 'a -> unit) -> Buffer.t -> 'a ref -> unit
 
 val read_option :
-  (Deriving_Json_lexer.lexbuf -> 'a) ->
-  Deriving_Json_lexer.lexbuf -> 'a option
+  (Lexer.lexbuf -> 'a) ->
+  Lexer.lexbuf -> 'a option
 
 val write_option :
   (Buffer.t -> 'a -> unit) -> Buffer.t -> 'a option -> unit
 
 val read_array :
-  (Deriving_Json_lexer.lexbuf -> 'a) ->
-  Deriving_Json_lexer.lexbuf -> 'a array
+  (Lexer.lexbuf -> 'a) ->
+  Lexer.lexbuf -> 'a array
 
 val write_array :
   (Buffer.t -> 'a -> unit) -> Buffer.t -> 'a array -> unit

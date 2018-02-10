@@ -25,11 +25,11 @@ let deriver = "json"
 let sanitize expr = [%expr
   (let open! Ppx_deriving_runtime in [%e expr]) [@ocaml.warning "-A"]]
 
-let runtimename = "Deriving_Json"
+let runtimename = "Js_of_ocaml_deriving_json"
 
 let rt name = Ast_convenience.evar (Printf.sprintf "%s.%s" runtimename name)
 let rt_t arg = Ast_convenience.tconstr (Printf.sprintf "%s.t" runtimename) [arg]
-let lexer_ident name = Printf.sprintf "%s_lexer.%s" runtimename name
+let lexer_ident name = Printf.sprintf "%s.Lexer.%s" runtimename name
 let lexbuf_t = Ast_convenience.tconstr (lexer_ident "lexbuf") []
 let lexer name = Ast_convenience.evar (lexer_ident name)
 

@@ -28,8 +28,10 @@ function caml_js_from_float(x) { return x; }
 //Provides: caml_js_to_float const (const)
 function caml_js_to_float(x) { return x; }
 //Provides: caml_js_from_string mutable (const)
-//Requires: MlBytes
-function caml_js_from_string(s) { return s.toString(); }
+//Requires: caml_is_ascii, caml_utf16_of_utf8
+function caml_js_from_string(s) {
+    if(caml_is_ascii(s)) return s;
+    return caml_utf16_of_utf8(s); }
 //Provides: caml_js_from_array mutable (shallow)
 //Requires: raw_array_sub
 function caml_js_from_array(a) { return raw_array_sub(a,1,a.length-1); }
@@ -170,9 +172,6 @@ function caml_js_wrap_meth_callback_unsafe(f) {
 }
 //Provides: caml_js_equals mutable (const, const)
 function caml_js_equals (x, y) { return +(x == y); }
-//Provides: caml_js_to_byte_string const
-//Requires: caml_new_string
-function caml_js_to_byte_string (s) {return caml_new_string (s);}
 
 //Provides: caml_js_eval_string (const)
 //Requires: MlBytes

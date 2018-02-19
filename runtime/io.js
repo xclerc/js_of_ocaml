@@ -370,9 +370,9 @@ function caml_ml_output_bytes(chanid,buffer,offset,len) {
 }
 
 //Provides: caml_ml_output
-//Requires: caml_ml_output_bytes
+//Requires: caml_ml_output_bytes, caml_bytes_of_string
 function caml_ml_output(chanid,buffer,offset,len){
-    return caml_ml_output_bytes(chanid,buffer,offset,len);
+    return caml_ml_output_bytes(chanid,caml_bytes_of_string(buffer),offset,len);
 }
 
 //Provides: caml_ml_output_char

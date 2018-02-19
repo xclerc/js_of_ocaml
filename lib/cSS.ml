@@ -816,7 +816,10 @@ module Angle = struct
   let string_of_t = function
     | Deg   f -> Printf.sprintf "%f%s" f "deg"
     | Grad  f -> Printf.sprintf "%f%s" f "grad"
-    | Rad   f -> Printf.sprintf "%f%s" f "rad"
+    | Rad   f ->
+     let s = Printf.sprintf "%f%s" f "rad" in
+     print_endline "rad";
+     s
     | Turns f -> Printf.sprintf "%f%s" f "turns"
 
   type js_t = Js.js_string Js.t

@@ -88,7 +88,7 @@ let bounded_split r s i =
 let quote_re = regexp "[\\][()\\\\|+*.?{}^$]"
 
 let quote s =
-  Js.to_bytestring (Js.bytestring s)##(replace quote_re (Js.string "\\$&"))
+  Js.to_bytestring ((Js.bytestring s)##(replace quote_re (Js.string "\\$&")))
 
 let regexp_string s = regexp (quote s)
 

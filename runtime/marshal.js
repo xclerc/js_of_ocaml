@@ -46,8 +46,7 @@ var caml_marshal_constants = {
 
 
 //Provides: MlBytesReader
-//Requires: caml_new_string, caml_jsbytes_of_string
-function MlBytesReader (s, i) { this.s = caml_jsbytes_of_string(s); this.i = i; }
+function MlBytesReader (s, i) { this.s = s; this.i = i; }
 MlBytesReader.prototype = {
   read8u:function () { return this.s.charCodeAt(this.i++); },
   read8s:function () { return this.s.charCodeAt(this.i++) << 24 >> 24; },
@@ -76,7 +75,7 @@ MlBytesReader.prototype = {
   readstr:function (len) {
     var i = this.i;
     this.i = i + len;
-    return caml_new_string(this.s.substring(i, i + len));
+    return this.s.substring(i, i + len);
   }
 }
 

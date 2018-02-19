@@ -22,3 +22,10 @@ module Tailcall = Tailcall
 module GI507 = GI507
 module Match_with_exn = Match_with_exn
 module Mutable_closure = Mutable_closure
+
+
+let () =
+  let xxxxx = "qwertyuio" in
+  if String.unsafe_get xxxxx 2 = 'e'
+  then print_endline "super"
+  else assert false

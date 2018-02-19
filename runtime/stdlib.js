@@ -76,9 +76,9 @@ function caml_call_gen(f, args) {
 var caml_named_values = {};
 
 //Provides: caml_register_named_value (const,const)
-//Requires: caml_named_values, caml_jsbytes_of_string
+//Requires: caml_named_values
 function caml_register_named_value(nm,v) {
-  caml_named_values[caml_jsbytes_of_string(nm)] = v;
+  caml_named_values[nm] = v;
   return 0;
 }
 
@@ -125,9 +125,9 @@ function caml_return_exn_constant (tag) { return tag; }
 function caml_raise_with_arg (tag, arg) { throw [0, tag, arg]; }
 
 //Provides: caml_raise_with_string (const, const)
-//Requires: caml_raise_with_arg,caml_new_string
+//Requires: caml_raise_with_arg
 function caml_raise_with_string (tag, msg) {
-  caml_raise_with_arg (tag, caml_new_string (msg));
+  caml_raise_with_arg (tag, msg);
 }
 
 //Provides: caml_raise_sys_error (const)
@@ -152,7 +152,9 @@ function caml_wrap_exception(e) {
      && e instanceof joo_global_object.RangeError
      && e.message
      && e.message.match(/maximum call stack/i))
-    return caml_return_exn_constant(caml_global_data.Stack_overflow);
+    {
+	return caml_return_exn_constant(caml_global_data.Stack_overflow);
+    }
   //Stack_overflow: firefox
   if(joo_global_object.InternalError
      && e instanceof joo_global_object.InternalError
@@ -327,16 +329,25 @@ function caml_floatarray_create(len){
 }
 
 //Provides: caml_compare_val (const, const, const)
-//Requires: MlBytes, caml_int64_compare, caml_int_compare, caml_string_compare
+//Requires: MlBytes, caml_int64_compare, caml_int_compare, caml_bytes_compare, caml_string_compare
 //Requires: caml_invalid_argument
 function caml_compare_val (a, b, total) {
   var stack = [];
   for(;;) {
     if (!(total && a === b)) {
-      if (a instanceof MlBytes) {
+      if (typeof a=== "string") {
+        if (typeof b === "string") {
+          if (a !== b) {
+            var x = caml_string_compare(a,b);
+            if (x != 0) return x;
+          }
+	} else
+        // Should not happen
+        return 1;
+      } else if (a instanceof MlBytes) {
         if (b instanceof MlBytes) {
             if (a !== b) {
-		var x = caml_string_compare(a, b);
+		var x = caml_bytes_compare(a, b);
 		if (x != 0) return x;
 	    }
         } else
@@ -495,10 +506,9 @@ function caml_int_of_string (s) {
 }
 
 //Provides: caml_float_of_string (const)
-//Requires: caml_failwith, caml_jsbytes_of_string
+//Requires: caml_failwith
 function caml_float_of_string(s) {
   var res;
-  s = caml_jsbytes_of_string (s);
   res = +s;
   if ((s.length > 0) && (res === res)) return res;
   s = s.replace(/_/g,"");
@@ -523,9 +533,8 @@ function caml_is_printable(c) { return +(c > 31 && c < 127); }
 
 ///////////// Format
 //Provides: caml_parse_format
-//Requires: caml_jsbytes_of_string, caml_invalid_argument
+//Requires: caml_invalid_argument
 function caml_parse_format (fmt) {
-  fmt = caml_jsbytes_of_string(fmt);
   var len = fmt.length;
   if (len > 31) caml_invalid_argument("format_int: format too long");
   var f =
@@ -579,7 +588,6 @@ function caml_parse_format (fmt) {
 }
 
 //Provides: caml_finish_formatting
-//Requires: caml_new_string
 function caml_finish_formatting(f, rawbuffer) {
   if (f.uppercase) rawbuffer = rawbuffer.toUpperCase();
   var len = rawbuffer.length;
@@ -604,14 +612,13 @@ function caml_finish_formatting(f, rawbuffer) {
   buffer += rawbuffer;
   if (f.justify == '-')
     for (var i = len; i < f.width; i++) buffer += ' ';
-  return caml_new_string (buffer);
+  return buffer;
 }
 
 //Provides: caml_format_int const (const, const)
 //Requires: caml_parse_format, caml_finish_formatting, caml_str_repeat
-//Requires: caml_new_string, caml_jsbytes_of_string
 function caml_format_int(fmt, i) {
-  if (caml_jsbytes_of_string(fmt) == "%d") return caml_new_string(""+i);
+  if (fmt == "%d") return ""+i;
   var f = caml_parse_format(fmt);
   if (i < 0) { if (f.signedconv) { f.sign = -1; i = -i; } else i >>>= 0; }
   var s = i.toString(f.base);
@@ -701,6 +708,9 @@ function caml_hash_univ_param (count, limit, obj) {
         hash_accu = (hash_accu * 19 + obj[0]) | 0;
         for (var i = obj.length - 1; i > 0; i--) hash_aux (obj[i]);
       }
+    } else if (typeof obj === "string") {
+        for (var b = obj, l = obj.length, i = 0; i < l; i++)
+          hash_accu = (hash_accu * 19 + b.charCodeAt(i)) | 0;
     } else if (obj instanceof MlBytes) {
       count --;
       switch (obj.t & 6) {
@@ -902,15 +912,13 @@ function caml_hash (count, limit, seed, obj) {
 var caml_initial_time = new Date() * 0.001;
 function caml_sys_time () { return new Date() * 0.001 - caml_initial_time; }
 //Provides: caml_sys_get_config const
-//Requires: caml_new_string
 function caml_sys_get_config () {
-  return [0, caml_new_string("Unix"), 32, 0];
+  return [0, "Unix", 32, 0];
 }
 
 //Provides: caml_sys_const_backend_type const
-//Requires: caml_new_string
 function caml_sys_const_backend_type () {
-  return [0, caml_new_string("js_of_ocaml")];
+  return [0, "js_of_ocaml"];
 }
 
 
@@ -1189,14 +1197,12 @@ function caml_ml_runtime_warnings_enabled (_unit) {
 }
 
 //Provides: caml_runtime_variant
-//Requires: caml_new_string
 function caml_runtime_variant(_unit) {
-  return caml_new_string("");
+  return "";
 }
 //Provides: caml_runtime_parameters
-//Requires: caml_new_string
 function caml_runtime_parameters(_unit) {
-  return caml_new_string("");
+  return "";
 }
 
 

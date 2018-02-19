@@ -8,7 +8,7 @@
 
 (rule
  ((targets (main.js))
-  (action  (run ${bin:js_of_ocaml}
+  (action  (run ${bin:js_of_ocaml} --pretty
                   --no-runtime ${lib:js_of_ocaml-compiler:runtime.js}
                   ${path:unix.js}
                   ${path:main.bc} -o ${@}))

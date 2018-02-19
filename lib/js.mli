@@ -589,11 +589,11 @@ external array : 'a array -> 'a js_array t = "caml_js_from_array"
 external to_array : 'a js_array t -> 'a array = "caml_js_to_array"
   (** Conversion of arrays from Javascript to OCaml. *)
 
-external bytestring : string -> js_string t = "caml_jsbytes_of_string"
+external bytestring : string -> js_string t = "%identity"
   (** Conversion of strings of bytes from OCaml to Javascript.
       (Each byte will be converted in an UTF-16 code point.) *)
 
-external to_bytestring : js_string t -> string = "caml_js_to_byte_string"
+external to_bytestring : js_string t -> string = "%identity"
   (** Conversion of strings of bytes from Javascript to OCaml.  (The
       Javascript string should only contain UTF-16 code points below
       255.) *)
